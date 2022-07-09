@@ -164,5 +164,5 @@ Under the [Apache2.0](https://github.com/logcgo/rbac/LICENSE)
 - Oauth0 Jwt https://jwt.io/
 
 ## 扩展阅读
-[理解Oauth2-阮一峰](http://www.ruanyifeng.com/blog/2014/05/oauth_2_0.html)
-[Casbin 超级管理员](https://casbin.org/docs/zh-CN/superadmin)
+- [理解Oauth2-阮一峰](http://www.ruanyifeng.com/blog/2014/05/oauth_2_0.html)
+- [Casbin 超级管理员](https://casbin.org/docs/zh-CN/superadmin)
