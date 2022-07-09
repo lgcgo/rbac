@@ -9,28 +9,27 @@
 **签发授权**
 ```Go
 import (
-	"github.com/lgcgo/rbac"
+    "github.com/lgcgo/rbac"
 )
 
 var (
-	settings = rbac.Settings{
-		TokenSignKey:   []byte("gVoiG1fbXf65osbjfi33MZre"),
-		TokenIssuer:    "lgcgo.com",
-		PolicyFilePath: "examples/policy.csv",
-	}
+    settings = rbac.Settings{
+        TokenSignKey:   []byte("gVoiG1fbXf65osbjfi33MZre"),
+        TokenIssuer:    "lgcgo.com",
+        PolicyFilePath: "examples/policy.csv",
+    }
 )
 
 func main(){
-	// 实例化
-	if r, err :=rbac.New(settings); err != nil {
-		panic(err)
-	}
-	// 签发授权
-    if out, err = r.Authorization("uid001", "subAdmin"); err != nil {
-        panic(err)
-    }
-	
-	// 格式化打印
+    // 实例化
+    if r, err :=rbac.New(settings); err != nil {
+        panic(err)
+    }
+    // 签发授权
+    if out, err = r.Authorization("uid001", "subAdmin"); err != nil {
+        panic(err)
+    }
+    // 格式化打印
     outJson, _ := json.MarshalIndent(out, "", "   ")
     fmt.Println(string(outJson))
 }
@@ -50,7 +49,7 @@ func main(){
 ```Go
 // 实例化
 if r, err = rbac.New(settings); err != nil {
-	panic(err)
+    panic(err)
 }
 refreshToken := "×××.×××.×××"
 r.RefreshAuthorization(refreshToken)
@@ -61,7 +60,7 @@ r.RefreshAuthorization(refreshToken)
 ```Go
 // 实例化
 if r, err = rbac.New(settings); err != nil {
-	panic(err)
+    panic(err)
 }
 accessToken := "×××.×××.×××"
 claims, err := r.VerifyToken(accessToken)
@@ -72,11 +71,13 @@ claims, err := r.VerifyToken(accessToken)
 ```Go
 // 实例化
 if r, err = rbac.New(settings); err != nil {
-	panic(err)
+    panic(err)
 }
+
 path := "/user"
 method := "GET"
 role := claims["isr"].(string)
+// 验证请求
 r.VerifyRequest(path, method, role)
 ```
 该接口一般在验证Token后使用，底层调用Casbin进行权限认证，它只对签发角色 `isr` 负责，即相同的角色对同一个资源有相同的权限。
@@ -89,24 +90,24 @@ r.VerifyRequest(path, method, role)
 **使用fs.Fs adapter示例**
 ```Go
 import (
-	casbinfsadapter "github.com/naucon/casbin-fs-adapter"
-	"github.com/lgcgo/rbac"
+    casbinfsadapter "github.com/naucon/casbin-fs-adapter"
+    "github.com/lgcgo/rbac"
 )
 
 var settings = Settings{
-	TokenSignKey:   []byte("gVoiG1fbXf65osbjfi33MZre"),
-	TokenIssuer:    "lgcgo.com",
-	PolicyFilePath: "examples/policy.csv",
+    TokenSignKey:   []byte("gVoiG1fbXf65osbjfi33MZre"),
+    TokenIssuer:    "lgcgo.com",
+    PolicyFilePath: "examples/policy.csv",
 }
 
 func main(){
-	// 实例化
-	fsys := os.DirFS("examples/config/")
-	adapter := casbinfsadapter.NewAdapter(fsys, "policy.csv")
-	// 实例化
-	r, err :=rbac.New(settings, adapter)
-	
-	...
+    // 实例化第三方adapter
+    fsys := os.DirFS("examples/config/")
+    adapter := casbinfsadapter.NewAdapter(fsys, "policy.csv")
+    
+    // 实例化
+    r, err :=rbac.New(settings, adapter)
+    // ...
 }
 ```
 一般情况下不建议使用orm或sql的内置适配器，原因一是效率不如内置的适配器，二是非关系型数据放sql里面怪别扭的。
@@ -115,39 +116,42 @@ func main(){
 **GoFrame示例**
 ```Go
 var settings = rbac.Setting{
-	...
+    // ...
 }
 func Authentication(r *ghttp.Request) {
-	if obj, err :=rbac.New(settings); err != nil {
-		panic(err)
-	}
-	
-	// Header传值 Authorization: Bearer <token>
-    if r.Header.Get("Authorization") == "" {
-		panic("headers authorization not exists")
-    }
-	// 拆分字符串
-    strArr = strings.SplitN(r.Header.Get("Authorization"), " ", 2)
-    // 支持Bearer方案
-    if strArr[0] != "Bearer" {
-		panic("authorization scheme not support")
-    }
-	// 获取Token票据
-	tokenTicket := strArr[1]
-	claims, err := obj.VerifyToken(tokenTicket)
-	
-	// 从声明中获取用户角色
-	role := claims["isr"].(string)
-	
-	// 验证角色的请求权限
-	if err = obj.VerifyRequest(path, method, role); err != nil {
-		panic("deny the request")
-	}
-	
-	// 从声明中获取用户唯一ID
-	// uid = claims["sub"].(string)
-	
-	r.Middleware.Next()
+    if obj, err :=rbac.New(settings); err != nil {
+        panic(err)
+    }
+    // Header传值 Authorization: Bearer <token>
+    if r.Header.Get("Authorization") == "" {
+        panic("headers authorization not exists")
+    }
+    strArr = strings.SplitN(r.Header.Get("Authorization"), " ", 2)
+    
+    // 支持Bearer方案
+    if strArr[0] != "Bearer" {
+        panic("authorization scheme not support")
+    }
+    
+    // 获取Token票据
+    tokenTicket := strArr[1]
+    if claims, err := obj.VerifyToken(tokenTicket); err != nil {
+    	panic("token invalid")
+    }
+    
+    // 从声明中获取用户角色
+    role := claims["isr"].(string)
+    
+    // 验证角色的请求权限
+    if err = obj.VerifyRequest(path, method, role); err != nil {
+        panic("deny the request")
+    }
+
+    // 从声明中获取用户唯一ID
+    // uid = claims["sub"].(string)
+    // 用uid做些什么
+
+    r.Middleware.Next()
 }
 ```
 
