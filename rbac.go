@@ -32,10 +32,10 @@ type Settings struct {
 
 // 授权返回结构
 type Token struct {
-	AccessToken  string
-	TokenType    string
-	ExpiresIn    uint
-	RefreshToken string
+	AccessToken  string `json:"accessToken"`
+	TokenType    string `json:"tokenType"`
+	ExpiresIn    uint   `json:"expiresIn"`
+	RefreshToken string `json:"refreshToken"`
 }
 
 func New(sets Settings, params ...interface{}) (*Rbac, error) {

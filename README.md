@@ -37,10 +37,10 @@ func main(){
 打印结果
 ```Shell
 {
-    "AccessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3QiOiJncmFudCIsImlzciI6InN1YkFkbWluIiwiaXNzIjoibGdjZ28uY29tIiwic3ViIjoidWlkMDAxIiwiZXhwIjoxNjU3NDM3NTk5LCJuYmYiOjE2NTczNTExOTksImlhdCI6MTY1NzM1MTE5OX0.CBzE0bn9mKYqYIDNVgujnHTFUM9uTM54mwRwpzjcDFA",
-    "TokenType": "Bearer",
-    "ExpiresIn": 86400,
-    "RefreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3QiOiJyZW5ldyIsImlzciI6InN1YkFkbWluIiwiaXNzIjoibGdjZ28uY29tIiwic3ViIjoidWlkMDAxIiwiZXhwIjoxNjU3NjEwMzk5LCJuYmYiOjE2NTczNTExOTksImlhdCI6MTY1NzM1MTE5OX0.Pozlza3jeWk6Kd2C6ZebiZcD3nZoMRfQdJV9alEzfj0"
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3QiOiJncmFudCIsImlzciI6InN1YkFkbWluIiwiaXNzIjoibGdjZ28uY29tIiwic3ViIjoidWlkMDAxIiwiZXhwIjoxNjU3NDM3NTk5LCJuYmYiOjE2NTczNTExOTksImlhdCI6MTY1NzM1MTE5OX0.CBzE0bn9mKYqYIDNVgujnHTFUM9uTM54mwRwpzjcDFA",
+    "tokenType": "Bearer",
+    "expiresIn": 86400,
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3QiOiJyZW5ldyIsImlzciI6InN1YkFkbWluIiwiaXNzIjoibGdjZ28uY29tIiwic3ViIjoidWlkMDAxIiwiZXhwIjoxNjU3NjEwMzk5LCJuYmYiOjE2NTczNTExOTksImlhdCI6MTY1NzM1MTE5OX0.Pozlza3jeWk6Kd2C6ZebiZcD3nZoMRfQdJV9alEzfj0"
 }
 ```
 返回的数据结构，参考了Oauth2授权模式，实际上已经满足了密码模式条件，只是登录认证需要而且**应该**由应用系统本身实现。
