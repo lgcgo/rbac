@@ -26,7 +26,7 @@ type Settings struct {
 	TokenSignKey           []byte        // 必填项，Jwt加密字符串，使用随机的字符串即可
 	TokenIssuer            string        // 选填项，Jwt的签发者，如lgcgo.com
 	PolicyFilePath         string        // 可选项，授权政策文件路径；当使用默认的adapter时为必填
-	AccessTokenExpireTime  time.Duration // 可选项，access_token过期时间，默认24小时，
+	AccessTokenExpireTime  time.Duration // 可选项，access_token过期时间，默认24小时
 	RefreshTokenExpireTime time.Duration // 可选项，refresh_token过期时间，默认是access_token过期时间的3倍数
 }
 
