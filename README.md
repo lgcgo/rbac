@@ -65,7 +65,7 @@ if r, err = rbac.New(settings); err != nil {
 accessToken := "×××.×××.×××"
 claims, err := r.VerifyToken(accessToken)
 ```
-该接口通常在系统的中间件中使用，claims中 `应该` 包含用户唯一ID `sub` 以及用户角色名称 `isr` ，可以在该步骤中初始化用户信息（从缓存/数据库中读取用户数据）
+该接口通常在系统的中间件中使用，claims中 `应该` 包含用户唯一ID `sub` 以及用户角色名称 `isr` ，可以在该步骤中初始化用户信息（从缓存/数据库中读取用户数据）。
 
 **验证请求**
 ```Go
@@ -139,17 +139,17 @@ var (
 )
 
 func main() {
-	if r, err = rbac.New(sets); err != nil {
-		panic(err)
-	}
+    if r, err = rbac.New(sets); err != nil {
+        panic(err)
+    }
 
-	if err = r.SavePolicyCsv(uriPolicys, rolePolicys); err != nil {
-		panic(err)
-	}
+    if err = r.SavePolicyCsv(uriPolicys, rolePolicys); err != nil {
+        panic(err)
+    }
 }
 ```
 `SavePolicyCsv` 仅支持使用默认的policy适配器。请注意每次调用时，都是覆盖重写整个csv文件，也就要求传入完整的 `[]RuiPolicy` 和 `[]RolePolicy`。
-
+<hr>
 可以在这里找到更多的适配器[Casbin适配器](https://casbin.org/docs/zh-CN/adapters)。
 
 **使用fs.Fs adapter示例**
