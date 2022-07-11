@@ -1,3 +1,5 @@
+[![OSCS Status](https://www.oscs1024.com/platform/badge/lgcgo/rbac.svg?size=small)](https://www.oscs1024.com/project/lgcgo/rbac?ref=badge_small)
+
 ## 介绍
 一个Go语言基于Casbin认证、JWT授权的 [RBAC](https://en.wikipedia.org/wiki/Role-based_access_control) 基于角色的访问控制完整实现。
 
