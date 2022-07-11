@@ -1,8 +1,8 @@
 /*
- * License: https://github.com/lgcgo/rbac/LICENSE
  * Created Date: Wednesday, June 29th 2022, 11:56:33 pm
- * Author: jimmy
+ * Author: jimmy.liu
  *
+ * License: https://github.com/lgcgo/rbac/LICENSE
  * Copyright (c) 2022 Author https://lgcgo.com
  */
 
@@ -17,8 +17,9 @@ import (
 )
 
 type Rbac struct {
-	settings      Settings
-	policyAdapter persist.Adapter
+	settings Settings
+	Jwt      *Jwt
+	Casbin   *Casbin
 }
 
 // 设置项
@@ -38,27 +39,16 @@ type Token struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
-func New(sets Settings, params ...interface{}) (*Rbac, error) {
+var insRabc = &Rbac{}
+
+func New(sets Settings) (*Rbac, error) {
 	var (
-		adapter  persist.Adapter
 		duration time.Duration
-		ok       bool
 	)
 
 	// 验证加密密钥
 	if sets.TokenSignKey == nil || len(sets.TokenSignKey) == 0 {
-		return nil, errors.New(ErrorSettingTokenSignKeyInvalid)
-	}
-	// 验证授权政策
-	if len(params) > 0 {
-		if adapter, ok = params[0].(persist.Adapter); !ok {
-			return nil, errors.New(ErrorPolicyAdapterInvalid)
-		}
-	} else {
-		if sets.PolicyFilePath == "" {
-			return nil, errors.New(ErrorSettingPolicyFilePathInvalid)
-		}
-		adapter = fileadapter.NewAdapter(sets.PolicyFilePath)
+		return nil, errors.New(ErrorTokenSignKeyInvalid)
 	}
 	// 设置access_token默认过期时间
 	if sets.AccessTokenExpireTime == 0 {
@@ -69,18 +59,22 @@ func New(sets Settings, params ...interface{}) (*Rbac, error) {
 	if sets.RefreshTokenExpireTime == 0 {
 		sets.RefreshTokenExpireTime = sets.AccessTokenExpireTime * 3
 	}
+	// refresh_token过期时间必须大于access_token过期时间
+	if sets.AccessTokenExpireTime >= sets.RefreshTokenExpireTime {
+		return nil, errors.New(ErrorRefreshTokenExpireTimeInvalid)
+	}
 
-	return &Rbac{
-		sets,
-		adapter,
-	}, nil
+	insRabc.settings = sets
+	insRabc.Jwt = NewJwt()
+	insRabc.Casbin = NewCasbin()
+
+	return insRabc, nil
 }
 
 // 签发授权（oauth2密码模式）
 func (r *Rbac) Authorization(subject, role string) (*Token, error) {
 	var (
 		sets         = r.settings
-		jwt          = NewJwt(sets.TokenSignKey, sets.TokenIssuer)
 		currentTime  = time.Now()
 		err          error
 		accessToken  string
@@ -89,6 +83,9 @@ func (r *Rbac) Authorization(subject, role string) (*Token, error) {
 		expiresIn    float64
 	)
 
+	// 初始化Jwt实例
+	r.Jwt.Init(sets.TokenSignKey, sets.TokenIssuer)
+
 	// 实例化签名
 	iClaims := &IssueClaims{
 		Subject: subject,
@@ -96,12 +93,12 @@ func (r *Rbac) Authorization(subject, role string) (*Token, error) {
 	}
 	// 制作 accessToken
 	iClaims.Type = "grant"
-	if accessToken, err = jwt.IssueToken(iClaims, sets.AccessTokenExpireTime); err != nil {
+	if accessToken, err = r.Jwt.IssueToken(iClaims, sets.AccessTokenExpireTime); err != nil {
 		return nil, err
 	}
 	// 制作 refreshToken
 	iClaims.Type = "renew"
-	if refreshToken, err = jwt.IssueToken(iClaims, sets.RefreshTokenExpireTime); err != nil {
+	if refreshToken, err = r.Jwt.IssueToken(iClaims, sets.RefreshTokenExpireTime); err != nil {
 		return nil, err
 	}
 	// 获取过期秒数
@@ -122,13 +119,15 @@ func (r *Rbac) Authorization(subject, role string) (*Token, error) {
 func (r *Rbac) RefreshAuthorization(ticket string) (*Token, error) {
 	var (
 		sets   = r.settings
-		jwt    = NewJwt(sets.TokenSignKey, sets.TokenIssuer)
 		claims map[string]interface{}
 		err    error
 	)
 
+	// 初始化Jwt实例
+	r.Jwt.Init(sets.TokenSignKey, sets.TokenIssuer)
+
 	// 解析token
-	if claims, err = jwt.ParseToken(ticket); err != nil {
+	if claims, err = r.Jwt.ParseToken(ticket); err != nil {
 		return nil, err
 	}
 	// 校验签发类型
@@ -143,14 +142,16 @@ func (r *Rbac) RefreshAuthorization(ticket string) (*Token, error) {
 func (r *Rbac) VerifyToken(ticket string) (map[string]interface{}, error) {
 	var (
 		sets   = r.settings
-		jwt    = NewJwt(sets.TokenSignKey, sets.TokenIssuer)
 		claims map[string]interface{}
 		err    error
 	)
 
+	// 初始化Jwt实例
+	r.Jwt.Init(sets.TokenSignKey, sets.TokenIssuer)
+
 	// 解析Token
-	if claims, err = jwt.ParseToken(ticket); err != nil {
-		return nil, err
+	if claims, err = r.Jwt.ParseToken(ticket); err != nil {
+		return nil, errors.New("token parse fail")
 	}
 	// 非法动作签名
 	if claims["ist"] != "grant" {
@@ -163,15 +164,22 @@ func (r *Rbac) VerifyToken(ticket string) (map[string]interface{}, error) {
 // 验证角色请求
 func (r *Rbac) VerifyRequest(uri, method, role string) error {
 	var (
-		casbin *Casbin
-		err    error
+		adapter persist.Adapter
+		err     error
 	)
 
-	if casbin, err = NewCasbin(r.policyAdapter); err != nil {
+	// 默认使用file adapter
+	if r.Casbin.Adapter == nil {
+		adapter = fileadapter.NewAdapter(r.settings.PolicyFilePath)
+	} else {
+		adapter = r.Casbin.Adapter
+	}
+	// 初始化Casbin组件
+	if err = r.Casbin.Init(adapter); err != nil {
 		return err
 	}
 
-	return casbin.VerifyUriPolicy(&UriPolicy{
+	return r.Casbin.VerifyUriPolicy(&UriPolicy{
 		Subject: role,
 		Object:  uri,
 		Action:  method,

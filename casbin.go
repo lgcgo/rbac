@@ -17,8 +17,8 @@ import (
 )
 
 type Casbin struct {
-	E *casbin.Enforcer
-	A persist.Adapter
+	Enforcer *casbin.Enforcer
+	Adapter  persist.Adapter
 }
 
 // 从字符串初始化模型
@@ -39,7 +39,13 @@ e = some(where (p.eft == allow))
 m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act || r.sub == "root"
 `
 
-func NewCasbin(a persist.Adapter) (*Casbin, error) {
+var insCasbin = &Casbin{}
+
+func NewCasbin() *Casbin {
+	return insCasbin
+}
+
+func (c *Casbin) Init(a persist.Adapter) error {
 	var (
 		e   *casbin.Enforcer // Casbin执行器
 		m   model.Model      // Casbin认证模型
@@ -48,14 +54,16 @@ func NewCasbin(a persist.Adapter) (*Casbin, error) {
 
 	// 使用字符串获取 Casbin模型
 	if m, err = model.NewModelFromString(modelText); err != nil {
-		return nil, err
+		return err
 	}
 	// 获取 Casbin执行器
 	if e, err = casbin.NewEnforcer(m, a); err != nil {
-		return nil, err
+		return err
 	}
+	c.Adapter = a
+	c.Enforcer = e
 
-	return &Casbin{e, a}, nil
+	return nil
 }
 
 // 检测Policy
@@ -65,11 +73,12 @@ func (c *Casbin) VerifyUriPolicy(p *UriPolicy) error {
 		ok  bool
 	)
 
-	if ok, err = c.E.Enforce(p.Subject, p.Object, p.Action); err != nil {
+	ok, err = c.Enforcer.Enforce(p.Subject, p.Object, p.Action)
+	if err != nil {
 		return err
 	}
 	if !ok {
-		return errors.New(ErrorNotRightRequest)
+		return errors.New(ErrorCasbinEnforceInvaild)
 	}
 
 	return nil

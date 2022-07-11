@@ -43,16 +43,19 @@ func ExampleRbac_RefreshAuthorization() {
 			TokenIssuer:    "lgcgo.com",
 			PolicyFilePath: "examples/policy.csv",
 		}
-		refreshToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3QiOiJyZW5ldyIsImlzciI6InN1YkFkbWluIiwiaXNzIjoibGdjZ28uY29tIiwic3ViIjoidWlkMDAxIiwiZXhwIjoxNjU3NjA4MTM0LCJuYmYiOjE2NTczNDg5MzQsImlhdCI6MTY1NzM0ODkzNH0.cd2-AplZwnu4CbhAZvSwRdWYESWurHTZlbXMSDta4wA"
-		r            *Rbac
-		out          *Token
-		err          error
+		r     *Rbac
+		token *Token
+		out   *Token
+		err   error
 	)
 
 	if r, err = New(sets); err != nil {
 		panic(err)
 	}
-	if out, err = r.RefreshAuthorization(refreshToken); err != nil {
+	if token, err = r.Authorization("uid001", "subAdmin"); err != nil {
+		panic(err)
+	}
+	if out, err = r.RefreshAuthorization(token.RefreshToken); err != nil {
 		panic(err)
 	}
 	outJson, err := json.MarshalIndent(out, "", "	")
@@ -61,10 +64,10 @@ func ExampleRbac_RefreshAuthorization() {
 
 	// Output:
 	// {
-	// 	"AccessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3QiOiJncmFudCIsImlzciI6InN1YkFkbWluIiwiaXNzIjoibGdjZ28uY29tIiwic3ViIjoidWlkMDAxIiwiZXhwIjoxNjU3NDM1Mzk4LCJuYmYiOjE2NTczNDg5OTgsImlhdCI6MTY1NzM0ODk5OH0.xWcm_eGeyikb-1TXoYZmJmkWGuza_URX1HsA2GUePz4",
-	// 	"TokenType": "Bearer",
-	// 	"ExpiresIn": 86400,
-	// 	"RefreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3QiOiJyZW5ldyIsImlzciI6InN1YkFkbWluIiwiaXNzIjoibGdjZ28uY29tIiwic3ViIjoidWlkMDAxIiwiZXhwIjoxNjU3NjA4MTk4LCJuYmYiOjE2NTczNDg5OTgsImlhdCI6MTY1NzM0ODk5OH0.gLObT_ANnXTHK3xAqM9KN27H1zRXrPdp0boX6CuuObU"
+	// 	"accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3QiOiJncmFudCIsImlzciI6InN1YkFkbWluIiwiaXNzIjoibGdjZ28uY29tIiwic3ViIjoidWlkMDAxIiwiZXhwIjoxNjU3NTk2NzM2LCJuYmYiOjE2NTc1MTAzMzYsImlhdCI6MTY1NzUxMDMzNn0.jtcnM1Gvcs3XQFl7xdDU7-qnnL90RyhfljAqKE_DmsA",
+	// 	"tokenType": "Bearer",
+	// 	"expiresIn": 86400,
+	// 	"refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3QiOiJyZW5ldyIsImlzciI6InN1YkFkbWluIiwiaXNzIjoibGdjZ28uY29tIiwic3ViIjoidWlkMDAxIiwiZXhwIjoxNjU3NzY5NTM2LCJuYmYiOjE2NTc1MTAzMzYsImlhdCI6MTY1NzUxMDMzNn0.xFpO99WrCxmrrvi6rlDy2DdAFdT6-DkdMWaA-QXIQsU"
 	// }
 }
 
@@ -75,16 +78,19 @@ func ExampleRbac_VerifyToken() {
 			TokenIssuer:    "lgcgo.com",
 			PolicyFilePath: "examples/policy.csv",
 		}
-		accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3QiOiJncmFudCIsImlzciI6InN1YkFkbWluIiwiaXNzIjoibGdjZ28uY29tIiwic3ViIjoidWlkMDAxIiwiZXhwIjoxNjU3NDM1Mzk4LCJuYmYiOjE2NTczNDg5OTgsImlhdCI6MTY1NzM0ODk5OH0.xWcm_eGeyikb-1TXoYZmJmkWGuza_URX1HsA2GUePz4"
-		r           *Rbac
-		out         map[string]interface{}
-		err         error
+		r     *Rbac
+		token *Token
+		out   map[string]interface{}
+		err   error
 	)
 
 	if r, err = New(sets); err != nil {
 		panic(err)
 	}
-	if out, err = r.VerifyToken(accessToken); err != nil {
+	if token, err = r.Authorization("uid001", "subAdmin"); err != nil {
+		panic(err)
+	}
+	if out, err = r.VerifyToken(token.AccessToken); err != nil {
 		panic(err)
 	}
 	outJson, err := json.MarshalIndent(out, "", "	")
@@ -93,12 +99,12 @@ func ExampleRbac_VerifyToken() {
 
 	// Output:
 	// {
-	// 	"exp": 1657435398,
-	// 	"iat": 1657348998,
+	// 	"exp": 1657596869,
+	// 	"iat": 1657510469,
 	// 	"isr": "subAdmin",
 	// 	"iss": "lgcgo.com",
 	// 	"ist": "grant",
-	// 	"nbf": 1657348998,
+	// 	"nbf": 1657510469,
 	// 	"sub": "uid001"
 	// }
 }

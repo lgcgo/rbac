@@ -43,12 +43,16 @@ type IssueClaims struct {
 	Audience []string // 签发授众，例如指定的浏览器、应用标识等
 }
 
-// 使用签名创建Jwt实例
-func NewJwt(signKey []byte, issuer string) *Jwt {
-	return &Jwt{
-		signKey,
-		issuer,
-	}
+var insJwt = &Jwt{}
+
+func NewJwt() *Jwt {
+	return insJwt
+}
+
+// 初始化
+func (j *Jwt) Init(signKey []byte, issuer string) {
+	j.signKey = signKey
+	j.issuer = issuer
 }
 
 // 签发Token
@@ -72,11 +76,10 @@ func (j *Jwt) IssueToken(iClaims *IssueClaims, expireTime time.Duration) (string
 			IssuedAt:  pkg.NewNumericDate(time.Now()),
 		},
 	}
-
 	// 生成token
 	token = pkg.NewWithClaims(pkg.SigningMethodHS256, claims)
 	if ticket, err = token.SignedString(j.signKey); err != nil {
-		return "", errors.New(ErrorTokenSignFail)
+		return "", err
 	}
 
 	return ticket, nil
@@ -94,16 +97,15 @@ func (j *Jwt) ParseToken(ticket string) (map[string]interface{}, error) {
 	// 解析Token对象
 	if token, err = pkg.Parse(ticket, func(token *pkg.Token) (interface{}, error) {
 		if _, ok = token.Method.(*pkg.SigningMethodHMAC); !ok {
-			return nil, errors.New(ErrorTokenParseFail)
+			return nil, errors.New(ErrorJwtSigningMethodInvaild)
 		}
 		return j.signKey, nil
 	}); err != nil {
 		return nil, err
 	}
-
 	// 验证签名
 	if claims, ok = token.Claims.(pkg.MapClaims); !ok || !token.Valid {
-		return nil, errors.New(ErrorTokenParseFail)
+		return nil, errors.New(ErrorJwtClaimsInvaild)
 	}
 
 	return claims, nil

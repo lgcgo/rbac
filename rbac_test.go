@@ -2,44 +2,32 @@ package rbac
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
-	t.Run("TestNew_SettingTokenSignKeyEmptyFail", func(t *testing.T) {
+	t.Run("TestNew_TokenSignKeyInvalid", func(t *testing.T) {
 		var (
 			sets = Settings{
-				TokenSignKey: []byte{},
+				TokenSignKey: []byte(""),
 			}
 		)
 
 		_, err := New(sets)
-
 		assert.Error(t, err)
-		assert.Equal(t, err.Error(), ErrorSettingTokenSignKeyInvalid)
+		assert.Equal(t, ErrorTokenSignKeyInvalid, err.Error())
 	})
 
-	t.Run("TestNew_ErrorPolicyAdapterEmptyFail", func(t *testing.T) {
+	t.Run("TestNew_RefreshTokenExpireTimeInvalid", func(t *testing.T) {
 		var (
 			sets = Settings{
-				TokenSignKey:   []byte("gVoiG1fbXf65osbjfi33MZre"),
-				TokenIssuer:    "lgcgo.com",
-				PolicyFilePath: "",
-			}
-			err error
-		)
-		_, err = New(sets, "fali adapter")
-
-		assert.Equal(t, ErrorPolicyAdapterInvalid, err.Error())
-	})
-
-	t.Run("TestNew_SettingPolicyFilePathEmptyFail", func(t *testing.T) {
-		var (
-			sets = Settings{
-				TokenSignKey:   []byte("gVoiG1fbXf65osbjfi33MZre"),
-				TokenIssuer:    "lgcgo.com",
-				PolicyFilePath: "",
+				TokenSignKey:           []byte("gVoiG1fbXf65osbjfi33MZre"),
+				TokenIssuer:            "lgcgo.com",
+				PolicyFilePath:         "",
+				AccessTokenExpireTime:  24 * time.Hour,
+				RefreshTokenExpireTime: 12 * time.Hour,
 			}
 			err error
 		)
@@ -47,7 +35,7 @@ func TestNew(t *testing.T) {
 		_, err = New(sets)
 
 		assert.Error(t, err)
-		assert.Equal(t, err.Error(), ErrorSettingPolicyFilePathInvalid)
+		assert.Equal(t, ErrorRefreshTokenExpireTimeInvalid, err.Error())
 	})
 }
 
@@ -59,14 +47,16 @@ func TestRefreshAuthorization(t *testing.T) {
 				TokenIssuer:    "lgcgo.com",
 				PolicyFilePath: "examples/policy.csv",
 			}
-			accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3QiOiJpc3N1ZSIsImlzciI6InN1YkFkbWluIiwiaXNzIjoibGdjZ28uY29tIiwic3ViIjoidWlkMDAxIiwiZXhwIjoxNjU3NDMyNTcwLCJuYmYiOjE2NTczNDYxNzAsImlhdCI6MTY1NzM0NjE3MH0.oekFryKkVfBsPJDe-A6-Nph8jR0T2uS3_R4WUq2Kto0"
-			r           *Rbac
-			err         error
+			r     *Rbac
+			token *Token
+			err   error
 		)
-		if r, err = New(sets); err != nil {
-			panic(err)
-		}
-		_, err = r.RefreshAuthorization(accessToken)
+
+		r, _ = New(sets)
+
+		token, _ = r.Authorization("uid001", "u1")
+
+		_, err = r.RefreshAuthorization(token.AccessToken)
 
 		assert.Error(t, err)
 		assert.Equal(t, ErrorTokenIssueTypeInvalid, err.Error())

@@ -115,7 +115,9 @@ func main(){
     adapter := casbinfsadapter.NewAdapter(fsys, "policy.csv")
     
     // 实例化
-    r, err :=rbac.New(settings, adapter)
+    r, err :=rbac.New(settings)
+    // 设置适配器
+    r.Casbin.Init(adapter)
     // ...
 }
 ```
