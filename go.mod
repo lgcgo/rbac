@@ -1,4 +1,4 @@
-module github.com/logcgo/rbac
+module github.com/lgcgo/rbac
 
 go 1.16
 
