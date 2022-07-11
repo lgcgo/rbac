@@ -73,7 +73,7 @@ func (c *Casbin) VerifyUriPolicy(p *UriPolicy) error {
 		ok  bool
 	)
 
-	ok, err = c.Enforcer.Enforce(p.Subject, p.Object, p.Action)
+	ok, err = c.Enforcer.Enforce(p.Role, p.Path, p.Method)
 	if err != nil {
 		return err
 	}

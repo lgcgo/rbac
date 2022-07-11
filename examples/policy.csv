@@ -1,8 +1,5 @@
-p, userRole1, /user, GET
-p, userRole1, /user, PUT
-p, userRole1, /user, DELETE
-p, userRole1, /user/info, GET
-p, userRole1, /users, GET
-g, admin, userRole2
-g, admin, userRole1
-g, root, admin
+p, u1, /user, GET
+p, u1, /user, PUT
+p, u1, /user, DELETE
+p, u1, /users, GET
+g, superAdmin, u1

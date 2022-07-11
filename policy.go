@@ -19,15 +19,15 @@ type IPolicy interface {
 
 // 资源访问政策
 type UriPolicy struct {
-	Subject string // 代表用户角色
-	Object  string // 代表请求路径
-	Action  string // 代表请求方法
+	Role   string // 用户角色
+	Path   string // 资源路径
+	Method string // 请求方法
 }
 
 // 角色关系政策
 type RolePolicy struct {
-	ParentSubject string // 父级角色名称
-	Subject       string // 角色名称
+	ParentRole string // 父级角色名称
+	Role       string // 角色名称
 }
 
 // 资源访问政策，实现格式化行字符串
@@ -37,9 +37,9 @@ func (u *UriPolicy) FormatLine() string {
 	)
 
 	strArr = append(strArr, "p")
-	strArr = append(strArr, u.Subject)
-	strArr = append(strArr, u.Object)
-	strArr = append(strArr, u.Action)
+	strArr = append(strArr, u.Role)
+	strArr = append(strArr, u.Path)
+	strArr = append(strArr, u.Method)
 
 	return strings.Join(strArr, ", ")
 }
@@ -51,8 +51,8 @@ func (r *RolePolicy) FormatLine() string {
 	)
 
 	strArr = append(strArr, "g")
-	strArr = append(strArr, r.ParentSubject)
-	strArr = append(strArr, r.Subject)
+	strArr = append(strArr, r.ParentRole)
+	strArr = append(strArr, r.Role)
 
 	return strings.Join(strArr, ", ")
 }
