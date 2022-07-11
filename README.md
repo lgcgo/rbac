@@ -54,7 +54,7 @@ if r, err = rbac.New(settings); err != nil {
 refreshToken := "×××.×××.×××"
 r.RefreshAuthorization(refreshToken)
 ```
-平滑的token刷新机制，能有效提升用户体验，这也是为为什么参考Oauth2授权模式的原因；如果你对系统安全有着很高的要求，可以在当前步骤中添加使用 `refreshToken` 的条件。
+平滑的token刷新机制，能有效提升用户体验，这也是为为什么参考Oauth2授权模式的原因；如果你对系统安全有极致的要求，可以在当前步骤中添加使用 `refreshToken` 的条件。
 
 **验证Token**
 ```Go
@@ -65,7 +65,7 @@ if r, err = rbac.New(settings); err != nil {
 accessToken := "×××.×××.×××"
 claims, err := r.VerifyToken(accessToken)
 ```
-该接口一般在系统的中间件中使用，claims中 `应该` 包含用户唯一ID `sub` 以及用户角色名称 `isr` ，可以在该步骤中初始化用户上信息（缓存/数据库中读取用户数据）
+该接口通常在系统的中间件中使用，claims中 `应该` 包含用户唯一ID `sub` 以及用户角色名称 `isr` ，可以在该步骤中初始化用户信息（从缓存/数据库中读取用户数据）
 
 **验证请求**
 ```Go
@@ -80,7 +80,7 @@ role := claims["isr"].(string)
 // 验证请求
 r.VerifyRequest(path, method, role)
 ```
-该接口一般在验证Token后使用，底层调用Casbin进行权限认证，它只对签发角色 `isr` 负责，即相同的角色对同一个资源有相同的权限。
+该接口通常在验证Token后使用，底层调用Casbin进行权限认证，它只对签发角色 `isr` 负责，即相同的角色对同一个资源有相同的权限。
 
 ## 配置项
 项目 | 必填 | 说明 | 示例
@@ -93,6 +93,62 @@ RefreshTokenExpireTime | 否 | refreshToken过期时间，默认是accessToken�
 
 ## Policy的储存
 默认使用Casbin内置的 `file adapter` ，在初始化设置Setting中指定`PolicyFilePath` 即可。
+
+**更新policy.csv文件**
+```Go
+import (
+    "github.com/lgcgo/rbac"
+)
+
+var (
+    uriPolicys = []rbac.UriPolicy{
+        {
+            Role:   "u1",
+            Path:   "/user",
+            Method: "GET",
+        },
+        {
+            Role:   "u1",
+            Path:   "/user",
+            Method: "PUT",
+        },
+        {
+            Role:   "u1",
+            Path:   "/user",
+            Method: "DELETE",
+        },
+        {
+            Role:   "u1",
+            Path:   "/users",
+            Method: "GET",
+        },
+    }
+    rolePolicys = []rbac.RolePolicy{
+        {
+            ParentRole: "superAdmin",
+            Role:       "u1",
+        },
+    }
+    sets = rbac.Settings{
+        TokenSignKey:   []byte("gVoiG1fbXf65osbjfi33MZre"),
+        TokenIssuer:    "lgcgo.com",
+        PolicyFilePath: "examples/policy.csv",
+    }
+    r   *rbac.Rbac
+    err error
+)
+
+func main() {
+	if r, err = rbac.New(sets); err != nil {
+		panic(err)
+	}
+
+	if err = r.SavePolicyCsv(uriPolicys, rolePolicys); err != nil {
+		panic(err)
+	}
+}
+```
+`SavePolicyCsv` 仅支持使用默认的policy适配器。请注意每次调用时，都是覆盖重写整个csv文件，也就要求传入完整的 `[]RuiPolicy` 和 `[]RolePolicy`。
 
 可以在这里找到更多的适配器[Casbin适配器](https://casbin.org/docs/zh-CN/adapters)。
 
