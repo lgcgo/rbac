@@ -85,7 +85,7 @@ r.VerifyRequest(path, method, role)
 ## 配置项
 项目 | 必填 | 说明 | 示例
 --- | :---: | --- | --- 
-TokenSignKey | 否 | Jwt加密字符串，使用随机的字符串即可 | `[]byte{"abc123"}`
+TokenSignKey | 否 | Jwt加密字符串，使用随机的字符串即可 | `[]byte("abc123")`
 TokenIssuer  | 否 | Jwt的签发者，如lgcgo.com | `"lgcgo.com"`
 PolicyFilePath | 否 | 授权政策文件路径；当使用默认的policy adapter时为必填 | `"config/policy.csv"`
 AccessTokenExpireTime | 否 | accessToken过期时间，默认24小时 | `24 * time.Hour`
