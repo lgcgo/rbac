@@ -9,7 +9,9 @@
 package rbac
 
 import (
+	"bufio"
 	"errors"
+	"os"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
@@ -100,3 +102,41 @@ func (c *Casbin) VerifyUriPolicy(p *UriPolicy) error {
 
 	return nil
 }
+
+// 更新Policy.csv文件
+func (c *Casbin) SaveAllPolicyCsv(ups []UriPolicy, rps []RolePolicy) error {
+	var (
+		filePath = c.PolicyFilePath
+		file     *os.File
+		writer   *bufio.Writer
+		err      error
+	)
+
+	if filePath == "" {
+		return errors.New(ErrorPolicyFilePathInvalid)
+	}
+	// 获取文件句柄
+	file, err = os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC, 0666)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// 写入文件
+	writer = bufio.NewWriter(file)
+	for _, v := range ups {
+		writer.WriteString(v.FormatLine())
+		writer.WriteString("\n")
+	}
+	for _, v := range rps {
+		writer.WriteString(v.FormatLine())
+		writer.WriteString("\n")
+	}
+	writer.Flush()
+
+	return nil
+}
+
+// func (c *Casbin) Demo() {
+
+// }

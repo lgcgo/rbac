@@ -1,5 +1,5 @@
-p, u1, /user, GET
-p, u1, /user, PUT
-p, u1, /user, DELETE
-p, u1, /users, GET
-g, superAdmin, u1
+p, role::u1, /user, GET
+p, role::u1, /user, PUT
+p, role::u1, /user, DELETE
+p, role::u1, /users, GET
+g, role::superAdmin, role::u1

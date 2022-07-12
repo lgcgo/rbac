@@ -37,7 +37,7 @@ func (u *UriPolicy) FormatLine() string {
 	)
 
 	strArr = append(strArr, "p")
-	strArr = append(strArr, u.Role)
+	strArr = append(strArr, "role::"+u.Role)
 	strArr = append(strArr, u.Path)
 	strArr = append(strArr, u.Method)
 
@@ -51,8 +51,8 @@ func (r *RolePolicy) FormatLine() string {
 	)
 
 	strArr = append(strArr, "g")
-	strArr = append(strArr, r.ParentRole)
-	strArr = append(strArr, r.Role)
+	strArr = append(strArr, "role::"+r.ParentRole)
+	strArr = append(strArr, "role::"+r.Role)
 
 	return strings.Join(strArr, ", ")
 }
