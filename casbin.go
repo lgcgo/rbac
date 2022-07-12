@@ -21,6 +21,7 @@ import (
 
 type Casbin struct {
 	PolicyFilePath string
+	Domain         string
 	Enforcer       *casbin.Enforcer
 	Adapter        persist.Adapter
 }
@@ -28,19 +29,19 @@ type Casbin struct {
 // 从字符串初始化模型
 var modelText = `
  [request_definition]
- r = sub, obj, act
+ r = sub, dom, obj, act
  
  [policy_definition]
- p = sub, obj, act
+ p = sub, dom, obj, act
  
  [role_definition]
- g = _, _
+ g = _, _, _
  
  [policy_effect]
  e = some(where (p.eft == allow))
  
  [matchers]
- m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act || r.sub == "root"
+ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && r.obj == p.obj && r.act == p.act || r.sub == "root"
  `
 
 var insCasbin = &Casbin{}
@@ -85,6 +86,11 @@ func (c *Casbin) SetAdapter(a persist.Adapter) {
 	c.Adapter = a
 }
 
+// 设置域
+func (c *Casbin) SetDomain(domain string) {
+	c.Domain = domain
+}
+
 // 检测Policy
 func (c *Casbin) VerifyUriPolicy(p *UriPolicy) error {
 	var (
@@ -92,7 +98,7 @@ func (c *Casbin) VerifyUriPolicy(p *UriPolicy) error {
 		ok  bool
 	)
 
-	ok, err = c.Enforcer.Enforce(p.Role, p.Path, p.Method)
+	ok, err = c.Enforcer.Enforce(p.Role, p.Domain, p.Path, p.Method)
 	if err != nil {
 		return err
 	}
@@ -137,6 +143,6 @@ func (c *Casbin) SaveAllPolicyCsv(ups []UriPolicy, rps []RolePolicy) error {
 	return nil
 }
 
-// func (c *Casbin) Demo() {
+func (c *Casbin) Demo() {
 
-// }
+}

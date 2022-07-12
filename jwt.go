@@ -95,7 +95,7 @@ func (j *Jwt) ParseToken(ticket string) (map[string]interface{}, error) {
 		}
 		return j.signKey, nil
 	}); err != nil {
-		return nil, err
+		return nil, errors.New(ErrorJwtParseInvaild)
 	}
 	// 验证签名
 	if claims, ok = token.Claims.(pkg.MapClaims); !ok || !token.Valid {

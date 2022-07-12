@@ -1,5 +1,11 @@
-p, role::u1, /user, GET
-p, role::u1, /user, PUT
-p, role::u1, /user, DELETE
-p, role::u1, /users, GET
-g, role::superAdmin, role::u1
+p, role::admin1, manager, /user, POST
+p, role::admin1, manager, /user, GET
+p, role::admin1, manager, /user, PUT
+p, role::admin1, manager, /user, DELETE
+p, role::admin1, manager, /users, GET
+p, role::admin1, www, /article, GET
+p, role::userGroup1, www, /article, GET
+g, root, role::admin1, manager
+g, root, role::admin1, www
+g, role::admin1, role::admin2, manager
+g, role::admin1, role::userGroup1, www

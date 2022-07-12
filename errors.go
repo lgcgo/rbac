@@ -9,6 +9,7 @@ var (
 
 	// Jwt
 	ErrorJwtSigningMethodInvaild = "token signing method invalid"
+	ErrorJwtParseInvaild         = "token parse invaid"
 	ErrorJwtClaimsInvaild        = "token claim invaid"
 
 	// Casbin

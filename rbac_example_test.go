@@ -108,3 +108,27 @@ func ExampleRbac_VerifyToken() {
 	// 	"sub": "uid001"
 	// }
 }
+
+func ExampleRbac_VerifyRequest() {
+	var (
+		sets = Settings{
+			TokenSignKey:   []byte("gVoiG1fbXf65osbjfi33MZre"),
+			TokenIssuer:    "lgcgo.com",
+			PolicyFilePath: "examples/policy.csv",
+		}
+		r *Rbac
+		// out   map[string]interface{}
+		err error
+	)
+	if r, err = New(sets); err != nil {
+		panic(err)
+	}
+	r.Casbin.SetDomain("www")
+	err = r.VerifyRequest("/article", "GET", "role::admin1")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println()
+
+	// Output:
+}

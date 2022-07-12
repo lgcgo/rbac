@@ -21,6 +21,7 @@ type Rbac struct {
 
 // 设置项
 type Settings struct {
+	DefaultDomain          string
 	PolicyFilePath         string        // 可选项，授权政策文件路径；当使用默认的adapter时为必填
 	TokenSignKey           []byte        // 必填项，Jwt加密字符串，使用随机的字符串即可
 	TokenIssuer            string        // 选填项，Jwt的签发者，如lgcgo.com
@@ -43,6 +44,10 @@ func New(sets Settings) (*Rbac, error) {
 		duration time.Duration
 	)
 
+	// 设置默认Domain
+	if sets.DefaultDomain == "" {
+		sets.DefaultDomain = "default"
+	}
 	// 验证加密密钥
 	if sets.TokenSignKey == nil || len(sets.TokenSignKey) == 0 {
 		return nil, errors.New(ErrorTokenSignKeyInvalid)
@@ -137,9 +142,9 @@ func (r *Rbac) VerifyToken(ticket string) (map[string]interface{}, error) {
 
 	// 解析Token
 	if claims, err = r.Jwt.ParseToken(ticket); err != nil {
-		return nil, errors.New("token parse fail")
+		return nil, err
 	}
-	// 非法动作签名
+	// 非法的签发类型
 	if claims["ist"] != "grant" {
 		return nil, errors.New(ErrorTokenIssueTypeInvalid)
 	}
@@ -159,8 +164,9 @@ func (r *Rbac) VerifyRequest(path, method, role string) error {
 	}
 
 	return r.Casbin.VerifyUriPolicy(&UriPolicy{
-		role,
-		path,
-		method,
+		Role:   role,
+		Domain: r.Casbin.Domain,
+		Path:   path,
+		Method: method,
 	})
 }

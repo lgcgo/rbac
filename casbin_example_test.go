@@ -4,30 +4,62 @@ func ExampleCasbin_SaveAllPolicyCsv() {
 	var (
 		uriPolicys = []UriPolicy{
 			{
-				Role:   "u1",
+				Domain: "manager",
+				Role:   "admin1",
+				Path:   "/user",
+				Method: "POST",
+			},
+			{
+				Domain: "manager",
+				Role:   "admin1",
 				Path:   "/user",
 				Method: "GET",
 			},
 			{
-				Role:   "u1",
+				Domain: "manager",
+				Role:   "admin1",
 				Path:   "/user",
 				Method: "PUT",
 			},
 			{
-				Role:   "u1",
+				Domain: "manager",
+				Role:   "admin1",
 				Path:   "/user",
 				Method: "DELETE",
 			},
 			{
-				Role:   "u1",
+				Domain: "manager",
+				Role:   "admin1",
 				Path:   "/users",
+				Method: "GET",
+			},
+			{
+				Domain: "www",
+				Role:   "admin1",
+				Path:   "/article",
+				Method: "GET",
+			},
+			{
+				Domain: "www",
+				Role:   "userGroup1",
+				Path:   "/article",
 				Method: "GET",
 			},
 		}
 		rolePolicys = []RolePolicy{
 			{
-				ParentRole: "superAdmin",
-				Role:       "u1",
+				Role:   "admin1",
+				Domain: "manager",
+			},
+			{
+				ParentRole: "admin1",
+				Role:       "admin2",
+				Domain:     "manager",
+			},
+			{
+				ParentRole: "admin1",
+				Role:       "userGroup1",
+				Domain:     "www",
 			},
 		}
 		sets = Settings{
@@ -67,11 +99,17 @@ func ExampleCasbin_SaveAllPolicyCsv() {
 // 	// res = r.Casbin.Enforcer.GetAllObjects()
 // 	// res = r.Casbin.Enforcer.GetAllNamedActions("p")
 // 	// res = r.Casbin.Enforcer.GetAllNamedObjects("p")
-// 	res = r.Casbin.Enforcer.GetPermissionsForUser("role::u1")
+// 	// res = r.Casbin.Enforcer.GetAllRoles()
+// 	// res = r.Casbin.Enforcer.GetPolicy() // 只会获取p类型政策，不会获取角色关系
+// 	// res, _ = r.Casbin.Enforcer.GetUsersForRole("role::admin2", "manager") // 必须指定domain，只能获取直属父级
+// 	// res, _ = r.Casbin.Enforcer.GetAllDomains()
+// 	// res, _ = r.Casbin.Enforcer.GetDomainsForUser("root")
+
+// 	res = r.Casbin.Enforcer.GetPermissionsForUser("role::admin1")
 // 	for _, v := range res {
 // 		fmt.Println(v)
 // 	}
-// 	// fmt.Println(res)
+// 	fmt.Println(res)
 
 // 	// Output:
 // 	//
