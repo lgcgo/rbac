@@ -164,7 +164,7 @@ func (r *Rbac) VerifyToken(ticket string) (map[string]interface{}, error) {
 }
 
 // 验证角色请求
-func (r *Rbac) VerifyRequest(uri, method, role string) error {
+func (r *Rbac) VerifyRequest(path, method, role string) error {
 	var (
 		adapter persist.Adapter
 		err     error
@@ -183,7 +183,7 @@ func (r *Rbac) VerifyRequest(uri, method, role string) error {
 
 	return r.Casbin.VerifyUriPolicy(&UriPolicy{
 		role,
-		uri,
+		path,
 		method,
 	})
 }
