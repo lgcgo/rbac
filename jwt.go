@@ -45,14 +45,8 @@ type IssueClaims struct {
 
 var insJwt = &Jwt{}
 
-func NewJwt() *Jwt {
+func NewJwt(signKey []byte, issuer string) *Jwt {
 	return insJwt
-}
-
-// 初始化
-func (j *Jwt) Init(signKey []byte, issuer string) {
-	j.signKey = signKey
-	j.issuer = issuer
 }
 
 // 签发Token

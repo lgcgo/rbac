@@ -14,44 +14,56 @@ import (
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
 	"github.com/casbin/casbin/v2/persist"
+	fileadapter "github.com/casbin/casbin/v2/persist/file-adapter"
 )
 
 type Casbin struct {
-	Enforcer *casbin.Enforcer
-	Adapter  persist.Adapter
+	PolicyFilePath string
+	Enforcer       *casbin.Enforcer
+	Adapter        persist.Adapter
 }
 
 // 从字符串初始化模型
 var modelText = `
-[request_definition]
-r = sub, obj, act
-
-[policy_definition]
-p = sub, obj, act
-
-[role_definition]
-g = _, _
-
-[policy_effect]
-e = some(where (p.eft == allow))
-
-[matchers]
-m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act || r.sub == "root"
-`
+ [request_definition]
+ r = sub, obj, act
+ 
+ [policy_definition]
+ p = sub, obj, act
+ 
+ [role_definition]
+ g = _, _
+ 
+ [policy_effect]
+ e = some(where (p.eft == allow))
+ 
+ [matchers]
+ m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act || r.sub == "root"
+ `
 
 var insCasbin = &Casbin{}
 
-func NewCasbin() *Casbin {
+func NewCasbin(policyFilePath string) *Casbin {
+	insCasbin.PolicyFilePath = policyFilePath
 	return insCasbin
 }
 
-func (c *Casbin) Init(a persist.Adapter) error {
+func (c *Casbin) Init() error {
 	var (
+		a   persist.Adapter
 		e   *casbin.Enforcer // Casbin执行器
 		m   model.Model      // Casbin认证模型
 		err error
 	)
 
+	// 设置Adapter
+	if c.Adapter == nil {
+		if c.PolicyFilePath == "" {
+			return errors.New(ErrorPolicyFilePathInvalid)
+		}
+		a = fileadapter.NewAdapter(c.PolicyFilePath)
+		c.Adapter = a
+	}
 	// 使用字符串获取 Casbin模型
 	if m, err = model.NewModelFromString(modelText); err != nil {
 		return err
@@ -64,6 +76,11 @@ func (c *Casbin) Init(a persist.Adapter) error {
 	c.Enforcer = e
 
 	return nil
+}
+
+// 设置适配器
+func (c *Casbin) SetAdapter(a persist.Adapter) {
+	c.Adapter = a
 }
 
 // 检测Policy

@@ -13,9 +13,6 @@ import (
 	"errors"
 	"os"
 	"time"
-
-	"github.com/casbin/casbin/v2/persist"
-	fileadapter "github.com/casbin/casbin/v2/persist/file-adapter"
 )
 
 type Rbac struct {
@@ -26,9 +23,9 @@ type Rbac struct {
 
 // 设置项
 type Settings struct {
+	PolicyFilePath         string        // 可选项，授权政策文件路径；当使用默认的adapter时为必填
 	TokenSignKey           []byte        // 必填项，Jwt加密字符串，使用随机的字符串即可
 	TokenIssuer            string        // 选填项，Jwt的签发者，如lgcgo.com
-	PolicyFilePath         string        // 可选项，授权政策文件路径；当使用默认的adapter时为必填
 	AccessTokenExpireTime  time.Duration // 可选项，access_token过期时间，默认24小时
 	RefreshTokenExpireTime time.Duration // 可选项，refresh_token过期时间，默认是access_token过期时间的3倍数
 }
@@ -67,8 +64,8 @@ func New(sets Settings) (*Rbac, error) {
 	}
 
 	insRabc.settings = sets
-	insRabc.Jwt = NewJwt()
-	insRabc.Casbin = NewCasbin()
+	insRabc.Jwt = NewJwt(sets.TokenSignKey, sets.TokenIssuer)
+	insRabc.Casbin = NewCasbin(sets.PolicyFilePath)
 
 	return insRabc, nil
 }
@@ -84,9 +81,6 @@ func (r *Rbac) Authorization(subject, role string) (*Token, error) {
 		refreshToken string
 		expiresIn    float64
 	)
-
-	// 初始化Jwt实例
-	r.Jwt.Init(sets.TokenSignKey, sets.TokenIssuer)
 
 	// 实例化签名
 	iClaims := &IssueClaims{
@@ -120,13 +114,9 @@ func (r *Rbac) Authorization(subject, role string) (*Token, error) {
 // 刷新授权
 func (r *Rbac) RefreshAuthorization(ticket string) (*Token, error) {
 	var (
-		sets   = r.settings
 		claims map[string]interface{}
 		err    error
 	)
-
-	// 初始化Jwt实例
-	r.Jwt.Init(sets.TokenSignKey, sets.TokenIssuer)
 
 	// 解析token
 	if claims, err = r.Jwt.ParseToken(ticket); err != nil {
@@ -143,13 +133,9 @@ func (r *Rbac) RefreshAuthorization(ticket string) (*Token, error) {
 // 验证Token
 func (r *Rbac) VerifyToken(ticket string) (map[string]interface{}, error) {
 	var (
-		sets   = r.settings
 		claims map[string]interface{}
 		err    error
 	)
-
-	// 初始化Jwt实例
-	r.Jwt.Init(sets.TokenSignKey, sets.TokenIssuer)
 
 	// 解析Token
 	if claims, err = r.Jwt.ParseToken(ticket); err != nil {
@@ -166,18 +152,11 @@ func (r *Rbac) VerifyToken(ticket string) (map[string]interface{}, error) {
 // 验证角色请求
 func (r *Rbac) VerifyRequest(path, method, role string) error {
 	var (
-		adapter persist.Adapter
-		err     error
+		err error
 	)
 
-	// 默认使用file adapter
-	if r.Casbin.Adapter == nil {
-		adapter = fileadapter.NewAdapter(r.settings.PolicyFilePath)
-	} else {
-		adapter = r.Casbin.Adapter
-	}
 	// 初始化Casbin组件
-	if err = r.Casbin.Init(adapter); err != nil {
+	if err = r.Casbin.Init(); err != nil {
 		return err
 	}
 

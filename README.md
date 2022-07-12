@@ -175,7 +175,7 @@ func main(){
     // 实例化
     r, err :=rbac.New(settings)
     // 设置适配器
-    r.Casbin.Init(adapter)
+    r.Casbin.SetAdapter(adapter)
     // ...
 }
 ```
