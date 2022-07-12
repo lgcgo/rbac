@@ -7,6 +7,11 @@
 - 支持RefreshToken平滑刷新
 - Token黑名单（待实现）
 
+## 安装
+```Shell
+go get -u github.com/lgcgo/rbac
+```
+
 ## 使用示例
 **签发授权**
 ```Go
